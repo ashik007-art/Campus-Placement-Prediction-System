@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Dashboard - PlacementHub{% endblock %}
+{% block page_heading %}Placement Officer Command Center{% endblock %}
+
+{% block content %}
+<!-- Metrics Stats Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">Total Students</span>
+      <span class="stat-value">{{ metrics.total_students }}</span>
+      <span class="stat-subtext">Registered candidates</span>
+    </div>
+    <div class="stat-icon stat-icon-blue">
+      <i class="fa-solid fa-user-graduate"></i>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">Companies</span>
+      <span class="stat-value">{{ metrics.total_companies }}</span>
+      <span class="stat-subtext">Active corporate partners</span>
+    </div>
+    <div class="stat-icon stat-icon-purple">
+      <i class="fa-solid fa-building"></i>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">Placement Drives</span>
+      <span class="stat-value">{{ metrics.total_drives }}</span>
+      <span class="stat-subtext">Recruitment sessions</span>
+    </div>
+    <div class="stat-icon stat-icon-amber">
+      <i class="fa-solid fa-bullhorn"></i>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">Students Placed</span>
+      <span class="stat-value">{{ metrics.selected_students }}</span>
+      <span class="stat-subtext">{{ metrics.placement_rate }}% institutional rate</span>
+    </div>
+    <div class="stat-icon stat-icon-green">
+      <i class="fa-solid fa-award"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="charts-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-chart-column" style="color: var(--primary); margin-right: 8px;"></i> Department Placement Distribution</h2>
+      <a href="{{ url_for('reports.reports') }}" class="btn btn-secondary btn-sm">Full Report</a>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="adminDeptChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-chart-pie" style="color: #8b5cf6; margin-right: 8px;"></i> Application Status Breakdown</h2>
+      <span class="badge badge-info">{{ metrics.total_applications }} Total Applications</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="adminStatusChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Data Tables Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px;">
+  <!-- Upcoming Recruitment Drives -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-calendar-check" style="color: var(--primary); margin-right: 8px;"></i> Upcoming Placement Drives</h2>
+      <a href="{{ url_for('placements.list_drives') }}" class="btn btn-secondary btn-sm">Manage All</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Company &amp; Role</th>
+              <th>Drive Date</th>
+              <th>Package</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in metrics.upcoming_drives %}
+            <tr>
+              <td>
+                <div style="font-weight: 600;">{{ d.company_name }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">{{ d.role_name }}</div>
+              </td>
+              <td>{{ d.drive_date }}</td>
+              <td><span class="badge badge-neutral">{{ d.salary_package }}</span></td>
+              <td>
+                <span class="badge {% if d.status == 'Ongoing' %}badge-warning{% else %}badge-info{% endif %}">
+                  {{ d.status }}
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted" style="text-align: center; padding: 20px;">No upcoming drives scheduled.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Student Registrations -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-user-plus" style="color: #10b981; margin-right: 8px;"></i> Recent Candidate Registrations</h2>
+      <a href="{{ url_for('students.list_students') }}" class="btn btn-secondary btn-sm">All Students</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Department</th>
+              <th>CGPA</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in metrics.recent_students %}
+            <tr>
+              <td>
+                <div style="font-weight: 600;">{{ s.full_name }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">{{ s.student_id_number }}</div>
+              </td>
+              <td style="font-size: 0.82rem;">{{ s.department }}</td>
+              <td><strong>{{ "%.2f"|format(s.cgpa) if s.cgpa else "N/A" }}</strong></td>
+              <td>
+                <a href="{{ url_for('students.view_student', student_id=s.id) }}" class="btn btn-secondary btn-sm" style="padding: 3px 8px;">
+                  View
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted" style="text-align: center; padding: 20px;">No registered students found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.DASHBOARD_DEPT_DATA = {{ metrics.department_stats | tojson }};
+  window.DASHBOARD_STATUS_DATA = {{ metrics.application_status_stats | tojson }};
+</script>
+{% endblock %}

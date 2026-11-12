@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{% if company %}Edit Company - {{ company.name }}{% else %}Register Company{% endif %} - PlacementHub{% endblock %}
+{% block page_heading %}{% if company %}Edit Company Details{% else %}Register Recruiting Partner{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 720px; margin: 0 auto;">
+  <div class="card-header">
+    <h2 class="card-title">
+      <i class="fa-solid fa-building" style="color: var(--primary); margin-right: 8px;"></i>
+      {% if company %}Update Company Information{% else %}Add Corporate Partner{% endif %}
+    </h2>
+    <a href="{{ url_for('companies.list_companies') }}" class="btn btn-secondary btn-sm">Cancel</a>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{% if company %}{{ url_for('companies.edit_company', company_id=company.id) }}{% else %}{{ url_for('companies.add_company') }}{% endif %}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div class="form-group">
+        <label for="name">Company Name <span class="required">*</span></label>
+        <input type="text" id="name" name="name" class="form-control" value="{{ company.name if company else '' }}" placeholder="e.g. Google, TechCorp Solutions" required>
+      </div>
+
+      <div class="form-group">
+        <label for="industry">Industry Sector <span class="required">*</span></label>
+        <input type="text" id="industry" name="industry" class="form-control" value="{{ company.industry if company else '' }}" placeholder="e.g. Information Technology, FinTech, AI" required>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="location">Primary Office Location</label>
+          <input type="text" id="location" name="location" class="form-control" value="{{ company.location if company else '' }}" placeholder="e.g. Bangalore, Hyderabad">
+        </div>
+
+        <div class="form-group">
+          <label for="website">Company Website URL</label>
+          <input type="url" id="website" name="website" class="form-control" value="{{ company.website if company else '' }}" placeholder="https://company.example.com">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Company Overview / Description</label>
+        <textarea id="description" name="description" class="form-control" placeholder="Brief outline of operations and recruitment preferences...">{{ company.description if company else '' }}</textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+        <a href="{{ url_for('companies.list_companies') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-save"></i> {% if company %}Save Changes{% else %}Register Company{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

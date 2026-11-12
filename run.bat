@@ -1,0 +1,13 @@
+@echo off
+title Campus Placement Prediction System
+echo ========================================================
+echo Starting Campus Placement Prediction System...
+echo ========================================================
+
+if exist venv\Scripts\python.exe (
+    venv\Scripts\python.exe app.py
+) else (
+    python app.py
+)
+
+pause

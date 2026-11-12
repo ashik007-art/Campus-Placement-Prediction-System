@@ -1,0 +1,58 @@
+# Campus Placement Prediction System - SPARQL Queries
+# Namespace Prefixes
+PREFIX cpo: <https://example.org/campus-placement-ontology#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+# ==============================================================================
+# Query 1: Listing students and their undergraduate CGPAs
+# ==============================================================================
+SELECT ?studentName ?email ?cgpa ?backlogs
+WHERE {
+    ?student rdf:type cpo:Student ;
+             cpo:studentName ?studentName ;
+             cpo:studentEmail ?email ;
+             cpo:hasAcademicInformation ?academic .
+    ?academic cpo:cgpa ?cgpa ;
+              cpo:backlogCount ?backlogs .
+}
+ORDER BY DESC(?cgpa);
+
+# ==============================================================================
+# Query 2: Finding students with particular skills (e.g., Python)
+# ==============================================================================
+SELECT ?studentName ?skillName
+WHERE {
+    ?student rdf:type cpo:Student ;
+             cpo:studentName ?studentName ;
+             cpo:hasSkill ?skill .
+    ?skill rdfs:label ?skillName .
+    FILTER(?skillName = "Python")
+}
+ORDER BY ?studentName;
+
+# ==============================================================================
+# Query 3: Listing job roles and their required skills
+# ==============================================================================
+SELECT ?roleTitle ?requiredSkill
+WHERE {
+    ?jobRole rdf:type cpo:JobRole ;
+             cpo:jobRoleName ?roleTitle ;
+             cpo:requiresSkill ?skill .
+    ?skill rdfs:label ?requiredSkill .
+}
+ORDER BY ?roleTitle ?requiredSkill;
+
+# ==============================================================================
+# Query 4: Listing placement drives and associated companies
+# ==============================================================================
+SELECT ?driveTitle ?companyName ?driveDate
+WHERE {
+    ?company rdf:type cpo:Company ;
+             rdfs:label ?companyName ;
+             cpo:conducts ?drive .
+    ?drive rdfs:label ?driveTitle ;
+           cpo:driveDate ?driveDate .
+}
+ORDER BY ?driveDate;

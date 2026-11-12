@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" width="240" height="60">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Icon Group -->
+  <g transform="translate(10, 10)">
+    <rect width="40" height="40" rx="10" fill="url(#grad1)" />
+    <!-- Graduation Cap & Arrow -->
+    <path d="M20 12 L32 18 L20 24 L8 18 Z" fill="#ffffff" />
+    <path d="M12 20.5 L12 26 C12 28.5 28 28.5 28 26 L28 20.5" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+    <path d="M30 18 L30 25" stroke="#fcd34d" stroke-width="1.5" stroke-linecap="round" />
+    <circle cx="30" cy="26" r="1.5" fill="#fcd34d" />
+  </g>
+  <!-- Typography -->
+  <text x="60" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">CampusPlacement</text>
+  <text x="60" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" fill="#3b82f6" letter-spacing="0.5">PREDICTION &amp; READINESS</text>
+</svg>

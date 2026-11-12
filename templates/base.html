@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Campus Placement Prediction System{% endblock %}</title>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Core Stylesheets -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  {% if current_user %}
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="brand-title">
+          <i class="fa-solid fa-graduation-cap" style="color: #38bdf8;"></i>
+          <span>PlacementHub</span>
+          <span class="badge-pro">{{ current_user.role }}</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Overview</div>
+        <a href="{{ url_for('dashboard.dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </a>
+
+        {% if current_user.role == 'admin' %}
+        <div class="nav-section-title">Administration</div>
+        <a href="{{ url_for('students.list_students') }}" class="nav-item {% if 'students' in request.endpoint and request.endpoint != 'students.view_student' %}active{% endif %}">
+          <i class="fa-solid fa-user-graduate"></i>
+          <span>Students</span>
+        </a>
+        <a href="{{ url_for('reports.reports') }}" class="nav-item {% if 'reports' in request.endpoint %}active{% endif %}">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+        {% endif %}
+
+        {% if current_user.role == 'student' and current_student %}
+        <div class="nav-section-title">Academic & Profile</div>
+        <a href="{{ url_for('students.view_student', student_id=current_student.id) }}" class="nav-item {% if request.endpoint == 'students.view_student' %}active{% endif %}">
+          <i class="fa-solid fa-id-card"></i>
+          <span>My Profile & Skills</span>
+        </a>
+        {% endif %}
+
+        <div class="nav-section-title">Corporate & Recruitment</div>
+        <a href="{{ url_for('companies.list_companies') }}" class="nav-item {% if 'companies' in request.endpoint %}active{% endif %}">
+          <i class="fa-solid fa-building"></i>
+          <span>Companies</span>
+        </a>
+        <a href="{{ url_for('placements.list_drives') }}" class="nav-item {% if request.endpoint == 'placements.list_drives' %}active{% endif %}">
+          <i class="fa-solid fa-bullhorn"></i>
+          <span>Placement Drives</span>
+        </a>
+        <a href="{{ url_for('placements.applications') }}" class="nav-item {% if request.endpoint == 'placements.applications' %}active{% endif %}">
+          <i class="fa-solid fa-file-signature"></i>
+          <span>Applications</span>
+        </a>
+        <a href="{{ url_for('placements.placement_history') }}" class="nav-item {% if request.endpoint == 'placements.placement_history' %}active{% endif %}">
+          <i class="fa-solid fa-trophy"></i>
+          <span>Placement History</span>
+        </a>
+
+        <div class="nav-section-title">Intelligence & ML</div>
+        <a href="{{ url_for('predictions.list_predictions') }}" class="nav-item {% if 'predictions' in request.endpoint %}active{% endif %}">
+          <i class="fa-solid fa-brain"></i>
+          <span>Readiness Prediction</span>
+        </a>
+        <a href="{{ url_for('recommendations.recommendations') }}" class="nav-item {% if 'recommendations' in request.endpoint %}active{% endif %}">
+          <i class="fa-solid fa-lightbulb"></i>
+          <span>Recommendations</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-badge">
+          <div class="avatar-circle">
+            {{ current_user.full_name[:2].upper() }}
+          </div>
+          <div class="user-meta">
+            <div class="user-meta-name">{{ current_user.full_name }}</div>
+            <div class="user-meta-role">{{ current_user.role }}</div>
+          </div>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" title="Logout" style="color: #ef4444; font-size: 1.1rem;">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <header class="top-navbar">
+        <div class="nav-left">
+          <button class="mobile-menu-btn" aria-label="Toggle navigation">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <h1 class="page-title">{% block page_heading %}Campus Placement System{% endblock %}</h1>
+        </div>
+        <div class="nav-right">
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-sign-out-alt"></i> Logout
+          </a>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="alert-close">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </div>
+
+      <footer class="app-footer">
+        Campus Placement Prediction System &bull; Powered by Machine Learning &amp; RDF Knowledge Ontology &bull; Academic Year 2026
+      </footer>
+    </main>
+  </div>
+
+  {% else %}
+  <!-- Public Layout (Login, Register, Landing) -->
+  <div class="public-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container" style="max-width: 480px; margin: 20px auto 0;">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+              <button type="button" class="alert-close">&times;</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block public_content %}{% endblock %}
+  </div>
+  {% endif %}
+
+  <!-- Core JavaScript Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/predictions.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

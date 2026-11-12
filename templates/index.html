@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Placement Prediction System - Welcome{% endblock %}
+
+{% block public_content %}
+<div style="min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; display: flex; flex-direction: column;">
+  <header style="padding: 24px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+    <div style="display: flex; align-items: center; gap: 12px; font-size: 1.3rem; font-weight: 700;">
+      <i class="fa-solid fa-graduation-cap" style="color: #38bdf8; font-size: 1.6rem;"></i>
+      <span>PlacementHub</span>
+    </div>
+    <div style="display: flex; gap: 14px;">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">Log In</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register as Student</a>
+    </div>
+  </header>
+
+  <main style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; text-align: center;">
+    <div style="max-width: 840px;">
+      <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); margin-bottom: 18px; font-size: 0.85rem; padding: 6px 14px;">
+        <i class="fa-solid fa-microchip" style="margin-right: 6px;"></i> Machine Learning &amp; RDF Semantic Knowledge
+      </span>
+      <h1 style="font-size: 2.8rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px;">
+        Campus Placement Prediction &amp; Readiness Platform
+      </h1>
+      <p style="font-size: 1.15rem; color: #94a3b8; line-height: 1.6; margin-bottom: 36px; max-width: 720px; margin-left: auto; margin-right: auto;">
+        An intelligent campus recruitment system connecting students and placement officers. Analyze academic metrics, benchmark technical skills, calculate ML placement readiness scores, and discover personalized career recommendations.
+      </p>
+
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 50px;">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In to Portal
+        </a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-secondary" style="background: rgba(255,255,255,0.12); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); padding: 12px 28px; font-size: 1rem;">
+          <i class="fa-solid fa-user-plus"></i> Student Registration
+        </a>
+      </div>
+
+      <!-- Feature Highlights Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; text-align: left;">
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 22px;">
+          <i class="fa-solid fa-chart-line" style="color: #38bdf8; font-size: 1.5rem; margin-bottom: 12px;"></i>
+          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">ML Readiness Prediction</h3>
+          <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.5;">Evaluates 11 quantitative academic and experience metrics via trained Scikit-learn models.</p>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 22px;">
+          <i class="fa-solid fa-sliders" style="color: #34d399; font-size: 1.5rem; margin-bottom: 12px;"></i>
+          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">Skill Gap Analysis</h3>
+          <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.5;">Directly contrasts student competencies with corporate job role requirements.</p>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 22px;">
+          <i class="fa-solid fa-diagram-project" style="color: #fbbf24; font-size: 1.5rem; margin-bottom: 12px;"></i>
+          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">RDF Turtle Ontology</h3>
+          <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.5;">Formal semantic knowledge graph modeling students, skills, criteria, and drives.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

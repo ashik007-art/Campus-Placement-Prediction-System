@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Readiness Assessment Result - PlacementHub{% endblock %}
+{% block page_heading %}Placement-Readiness Assessment Report{% endblock %}
+
+{% block content %}
+<!-- Assessment Banner -->
+<div class="readiness-banner" style="background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);">
+  <div class="readiness-content">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+      <span class="badge" style="background: rgba(255, 255, 255, 0.15); color: #fff; font-size: 0.8rem;">
+        <i class="fa-solid fa-microchip"></i> Engine: {{ result.mode }}
+      </span>
+      <span class="badge {% if result.readiness_category == 'High Readiness' %}tier-high{% elif result.readiness_category == 'Moderate Readiness' %}tier-moderate{% else %}tier-low{% endif %}" style="font-size: 0.8rem;">
+        {{ result.readiness_category }}
+      </span>
+    </div>
+
+    <h2 style="font-size: 1.6rem; font-weight: 800; color: #ffffff;">{{ student.full_name }}'s Readiness Outcome</h2>
+    <p style="color: #cbd5e1; font-size: 0.9rem; line-height: 1.5; margin-bottom: 14px;">
+      {{ result.key_factors }}
+    </p>
+
+    <div style="font-size: 0.78rem; color: #94a3b8; background: rgba(0, 0, 0, 0.25); padding: 8px 14px; border-radius: 6px; display: inline-block;">
+      <i class="fa-solid fa-shield-halved"></i> {{ result.disclaimer }}
+    </div>
+  </div>
+
+  <div class="score-display-box" style="min-width: 170px;">
+    <div class="score-number">{{ "%.1f"|format(result.readiness_score) }}%</div>
+    <div class="score-tier-label" style="color: #38bdf8;">{{ result.readiness_category }}</div>
+    <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">Computed {{ (result.record.created_at|string)[:16] if result.record else 'Just now' }}</div>
+  </div>
+</div>
+
+<!-- Input Factor Evaluation Breakdown -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><i class="fa-solid fa-list-check" style="color: var(--primary); margin-right: 8px;"></i> Evaluated Profile Factors</h2>
+    <span class="badge badge-neutral">{{ student.department }} &bull; Class of {{ student.graduation_year }}</span>
+  </div>
+  <div class="card-body">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+      <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Undergraduate CGPA</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: #1e293b;">{{ "%.2f"|format(student.cgpa) }}</div>
+        <div style="font-size: 0.75rem; color: #10b981;">Min standard: 6.00</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Active Backlogs</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: {% if student.backlogs > 0 %}#ef4444{% else %}#10b981{% endif %};">
+          {{ student.backlogs }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">{% if student.backlogs > 0 %}Penalty applied{% else %}Zero backlogs{% endif %}</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">10th / 12th Board</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: #1e293b;">
+          {{ "%.1f"|format(student.tenth_percentage) }}% / {{ "%.1f"|format(student.twelfth_percentage) }}%
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Secondary foundation</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Skills &amp; Projects</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: #2563eb;">
+          {{ student.skills|length }} Skills &bull; {{ student.projects|length }} Proj
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ student.internships|length }} Internships</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recommended Action Plan Based on Identified Gaps -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><i class="fa-solid fa-lightbulb" style="color: #f59e0b; margin-right: 8px;"></i> Actionable Recommendations to Elevate Readiness</h2>
+    <a href="{{ url_for('recommendations.recommendations', student_id=student.id) }}" class="btn btn-secondary btn-sm">Full Gap Analysis &rarr;</a>
+  </div>
+  <div class="card-body">
+    {% for rec in recommendations %}
+    <div class="list-item-card" style="padding: 12px 0;">
+      <div class="item-left">
+        <span class="badge {% if rec.priority == 'High' %}badge-danger{% elif rec.priority == 'Medium' %}badge-warning{% else %}badge-info{% endif %}">
+          {{ rec.priority }} Priority
+        </span>
+        <div>
+          <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">{{ rec.title }}</div>
+          <div style="font-size: 0.82rem; color: #475569; margin-top: 2px;">{{ rec.description }}</div>
+        </div>
+      </div>
+      <span class="badge badge-neutral" style="font-size: 0.72rem;">{{ rec.category }}</span>
+    </div>
+    {% else %}
+    <p class="text-muted" style="text-align: center; padding: 20px;">No critical gaps detected. Profile demonstrates outstanding competitive readiness.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Action Footer -->
+<div style="display: flex; gap: 14px; justify-content: flex-end; margin-top: 20px;">
+  <a href="{{ url_for('predictions.list_predictions') }}" class="btn btn-secondary">
+    <i class="fa-solid fa-clock-rotate-left"></i> View All Predictions
+  </a>
+  <a href="{{ url_for('recommendations.recommendations', student_id=student.id) }}" class="btn btn-primary">
+    <i class="fa-solid fa-sliders"></i> Open Skill Gap Comparison
+  </a>
+</div>
+{% endblock %}

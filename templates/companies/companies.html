@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Corporate Recruiters - PlacementHub{% endblock %}
+{% block page_heading %}Recruiting Companies Directory{% endblock %}
+
+{% block content %}
+<!-- Filter & Search Toolbar -->
+<form method="GET" action="{{ url_for('companies.list_companies') }}" class="filter-bar">
+  <div class="filter-group">
+    <div class="search-input-wrapper">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" name="search" class="form-control" placeholder="Search by company, industry, location..." value="{{ search or '' }}">
+    </div>
+
+    <select name="industry" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="">All Industries</option>
+      {% for ind in industries %}
+      <option value="{{ ind }}" {% if selected_industry == ind %}selected{% endif %}>{{ ind }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    {% if search or selected_industry %}
+    <a href="{{ url_for('companies.list_companies') }}" class="btn btn-secondary btn-sm">Clear</a>
+    {% endif %}
+  </div>
+
+  {% if current_user.role == 'admin' %}
+  <a href="{{ url_for('companies.add_company') }}" class="btn btn-primary btn-sm">
+    <i class="fa-solid fa-plus"></i> Add New Company
+  </a>
+  {% endif %}
+</form>
+
+<!-- Companies Grid / Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+  {% for c in companies %}
+  <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+    <div class="card-header" style="align-items: flex-start;">
+      <div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">{{ c.name }}</h3>
+        <span class="badge badge-info" style="margin-top: 4px;">{{ c.industry }}</span>
+      </div>
+      <div class="avatar-circle" style="background: #e2e8f0; color: #1e293b; font-weight: 700;">
+        {{ c.name[:2].upper() }}
+      </div>
+    </div>
+
+    <div class="card-body" style="flex: 1;">
+      <p style="font-size: 0.85rem; color: #475569; line-height: 1.5; margin-bottom: 14px;">
+        {{ c.description or "No company overview provided." }}
+      </p>
+
+      <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">
+        <i class="fa-solid fa-location-dot" style="margin-right: 4px;"></i> {{ c.location or "Multiple locations" }}
+      </div>
+      {% if c.website %}
+      <div style="font-size: 0.8rem; margin-bottom: 12px;">
+        <i class="fa-solid fa-globe" style="margin-right: 4px;"></i>
+        <a href="{{ c.website }}" target="_blank" rel="noopener" style="color: var(--primary); text-decoration: none;">
+          {{ c.website }}
+        </a>
+      </div>
+      {% endif %}
+
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+        <span style="font-size: 0.8rem; font-weight: 600; color: #334155;">
+          {{ c.job_roles|length }} Open Job Role(s):
+        </span>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+          {% for r in c.job_roles %}
+          <span class="badge badge-neutral" style="font-size: 0.72rem;">{{ r.role_name }} ({{ r.salary_package }})</span>
+          {% else %}
+          <span class="text-muted" style="font-size: 0.75rem;">No active roles posted yet.</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card-header" style="background: #f8fafc; border-top: 1px solid var(--border-color); border-bottom: none; padding: 12px 20px;">
+      <a href="{{ url_for('companies.view_company', company_id=c.id) }}" class="btn btn-secondary btn-sm" style="width: 100%;">
+        View Company &amp; Roles &rarr;
+      </a>
+    </div>
+  </div>
+  {% else %}
+  <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+    <p class="text-muted">No company profiles match your current search criteria.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

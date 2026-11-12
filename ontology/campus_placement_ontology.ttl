@@ -1,0 +1,340 @@
+@prefix cpo: <https://example.org/campus-placement-ontology#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://example.org/campus-placement-ontology#>
+    rdf:type owl:Ontology ;
+    rdfs:label "Campus Placement Prediction and Readiness Ontology" ;
+    rdfs:comment "A formal ontology modeling students, academic records, technical skills, companies, job roles, recruitment drives, placement predictions, and recommendations." ;
+    owl:versionInfo "1.0.0" .
+
+#################################################################
+#    Classes
+#################################################################
+
+cpo:Person rdf:type owl:Class ;
+    rdfs:label "Person" ;
+    rdfs:comment "A human individual within the campus ecosystem." .
+
+cpo:Student rdf:type owl:Class ;
+    rdfs:subClassOf cpo:Person ;
+    rdfs:label "Student" ;
+    rdfs:comment "A candidate enrolled in an academic degree seeking campus placement." .
+
+cpo:Admin rdf:type owl:Class ;
+    rdfs:subClassOf cpo:Person ;
+    rdfs:label "Admin" ;
+    rdfs:comment "An administrator managing the placement portal and student accounts." .
+
+cpo:PlacementOfficer rdf:type owl:Class ;
+    rdfs:subClassOf cpo:Person ;
+    rdfs:label "PlacementOfficer" ;
+    rdfs:comment "A faculty member or coordinator orchestrating recruitment drives." .
+
+cpo:AcademicInformation rdf:type owl:Class ;
+    rdfs:label "AcademicInformation" ;
+    rdfs:comment "Academic performance indicators including CGPA, 10th/12th percentages, backlogs, and attendance." .
+
+cpo:Skill rdf:type owl:Class ;
+    rdfs:label "Skill" ;
+    rdfs:comment "A capability, technology, or competence possessed by a student or required for a role." .
+
+cpo:TechnicalSkill rdf:type owl:Class ;
+    rdfs:subClassOf cpo:Skill ;
+    rdfs:label "TechnicalSkill" ;
+    rdfs:comment "A technical domain skill such as Cloud Computing, Web Development, or Machine Learning." .
+
+cpo:ProgrammingSkill rdf:type owl:Class ;
+    rdfs:subClassOf cpo:TechnicalSkill ;
+    rdfs:label "ProgrammingSkill" ;
+    rdfs:comment "A computer programming language proficiency such as Python, Java, or C++." .
+
+cpo:SoftSkill rdf:type owl:Class ;
+    rdfs:subClassOf cpo:Skill ;
+    rdfs:label "SoftSkill" ;
+    rdfs:comment "Interpersonal, cognitive, and non-technical capabilities." .
+
+cpo:CommunicationSkill rdf:type owl:Class ;
+    rdfs:subClassOf cpo:SoftSkill ;
+    rdfs:label "CommunicationSkill" ;
+    rdfs:comment "Verbal and written communication proficiency." .
+
+cpo:AptitudeSkill rdf:type owl:Class ;
+    rdfs:subClassOf cpo:SoftSkill ;
+    rdfs:label "AptitudeSkill" ;
+    rdfs:comment "Quantitative, logical, and analytical reasoning aptitude." .
+
+cpo:Internship rdf:type owl:Class ;
+    rdfs:label "Internship" ;
+    rdfs:comment "Practical industry work experience completed by a student." .
+
+cpo:Project rdf:type owl:Class ;
+    rdfs:label "Project" ;
+    rdfs:comment "A software, hardware, or research project built by a student." .
+
+cpo:Certification rdf:type owl:Class ;
+    rdfs:label "Certification" ;
+    rdfs:comment "A verified credential awarded by a recognized testing organization or vendor." .
+
+cpo:Company rdf:type owl:Class ;
+    rdfs:label "Company" ;
+    rdfs:comment "A corporate recruiting entity participating in campus placement." .
+
+cpo:JobRole rdf:type owl:Class ;
+    rdfs:label "JobRole" ;
+    rdfs:comment "A designated employment vacancy or role offering defined criteria." .
+
+cpo:PlacementDrive rdf:type owl:Class ;
+    rdfs:label "PlacementDrive" ;
+    rdfs:comment "A scheduled campus recruitment event organized for one or more job roles." .
+
+cpo:EligibilityCriteria rdf:type owl:Class ;
+    rdfs:label "EligibilityCriteria" ;
+    rdfs:comment "Minimum thresholds (CGPA, backlogs, department) required to apply." .
+
+cpo:Application rdf:type owl:Class ;
+    rdfs:label "Application" ;
+    rdfs:comment "A formal application submitted by a student for a specific placement drive." .
+
+cpo:PlacementResult rdf:type owl:Class ;
+    rdfs:label "PlacementResult" ;
+    rdfs:comment "The final outcome of a recruitment drive application." .
+
+cpo:Prediction rdf:type owl:Class ;
+    rdfs:label "Prediction" ;
+    rdfs:comment "A placement readiness assessment produced by machine learning or rule scoring." .
+
+cpo:Recommendation rdf:type owl:Class ;
+    rdfs:label "Recommendation" ;
+    rdfs:comment "Actionable guidance generated to bridge academic or skill gaps." .
+
+cpo:Course rdf:type owl:Class ;
+    rdfs:label "Course" ;
+    rdfs:comment "An academic or training course recommended to enhance readiness." .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+cpo:hasAcademicInformation rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Student ;
+    rdfs:range cpo:AcademicInformation ;
+    rdfs:label "hasAcademicInformation" .
+
+cpo:hasSkill rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Student ;
+    rdfs:range cpo:Skill ;
+    rdfs:label "hasSkill" .
+
+cpo:hasInternship rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Student ;
+    rdfs:range cpo:Internship ;
+    rdfs:label "hasInternship" .
+
+cpo:hasProject rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Student ;
+    rdfs:range cpo:Project ;
+    rdfs:label "hasProject" .
+
+cpo:hasCertification rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Student ;
+    rdfs:range cpo:Certification ;
+    rdfs:label "hasCertification" .
+
+cpo:appliesFor rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Student ;
+    rdfs:range cpo:PlacementDrive ;
+    rdfs:label "appliesFor" .
+
+cpo:conducts rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Company ;
+    rdfs:range cpo:PlacementDrive ;
+    rdfs:label "conducts" .
+
+cpo:offers rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Company ;
+    rdfs:range cpo:JobRole ;
+    rdfs:label "offers" .
+
+cpo:requiresSkill rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:JobRole ;
+    rdfs:range cpo:Skill ;
+    rdfs:label "requiresSkill" .
+
+cpo:hasEligibilityCriteria rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:JobRole ;
+    rdfs:range cpo:EligibilityCriteria ;
+    rdfs:label "hasEligibilityCriteria" .
+
+cpo:hasApplication rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:PlacementDrive ;
+    rdfs:range cpo:Application ;
+    rdfs:label "hasApplication" .
+
+cpo:hasPlacementResult rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Application ;
+    rdfs:range cpo:PlacementResult ;
+    rdfs:label "hasPlacementResult" .
+
+cpo:receivesPrediction rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Student ;
+    rdfs:range cpo:Prediction ;
+    rdfs:label "receivesPrediction" .
+
+cpo:receivesRecommendation rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Student ;
+    rdfs:range cpo:Recommendation ;
+    rdfs:label "receivesRecommendation" .
+
+cpo:recommendsSkill rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Recommendation ;
+    rdfs:range cpo:Skill ;
+    rdfs:label "recommendsSkill" .
+
+cpo:recommendsCourse rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Recommendation ;
+    rdfs:range cpo:Course ;
+    rdfs:label "recommendsCourse" .
+
+cpo:recommendsJobRole rdf:type owl:ObjectProperty ;
+    rdfs:domain cpo:Recommendation ;
+    rdfs:range cpo:JobRole ;
+    rdfs:label "recommendsJobRole" .
+
+#################################################################
+#    Data Properties
+#################################################################
+
+cpo:studentName rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:Person ;
+    rdfs:range xsd:string ;
+    rdfs:label "studentName" .
+
+cpo:studentEmail rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:Person ;
+    rdfs:range xsd:string ;
+    rdfs:label "studentEmail" .
+
+cpo:cgpa rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:AcademicInformation ;
+    rdfs:range xsd:float ;
+    rdfs:label "cgpa" .
+
+cpo:tenthPercentage rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:AcademicInformation ;
+    rdfs:range xsd:float ;
+    rdfs:label "tenthPercentage" .
+
+cpo:intermediatePercentage rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:AcademicInformation ;
+    rdfs:range xsd:float ;
+    rdfs:label "intermediatePercentage" .
+
+cpo:backlogCount rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:AcademicInformation ;
+    rdfs:range xsd:integer ;
+    rdfs:label "backlogCount" .
+
+cpo:attendancePercentage rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:AcademicInformation ;
+    rdfs:range xsd:float ;
+    rdfs:label "attendancePercentage" .
+
+cpo:jobRoleName rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:JobRole ;
+    rdfs:range xsd:string ;
+    rdfs:label "jobRoleName" .
+
+cpo:placementStatus rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:Application ;
+    rdfs:range xsd:string ;
+    rdfs:label "placementStatus" .
+
+cpo:predictionScore rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:Prediction ;
+    rdfs:range xsd:float ;
+    rdfs:label "predictionScore" .
+
+cpo:driveDate rdf:type owl:DatatypeProperty ;
+    rdfs:domain cpo:PlacementDrive ;
+    rdfs:range xsd:date ;
+    rdfs:label "driveDate" .
+
+#################################################################
+#    Sample Individuals (Clearly labeled demonstration instances)
+#################################################################
+
+### Skills
+cpo:Skill_Python rdf:type cpo:ProgrammingSkill ;
+    rdfs:label "Python" .
+
+cpo:Skill_Java rdf:type cpo:ProgrammingSkill ;
+    rdfs:label "Java" .
+
+cpo:Skill_MachineLearning rdf:type cpo:TechnicalSkill ;
+    rdfs:label "Machine Learning" .
+
+cpo:Skill_SQL rdf:type cpo:TechnicalSkill ;
+    rdfs:label "SQL" .
+
+cpo:Skill_CloudComputing rdf:type cpo:TechnicalSkill ;
+    rdfs:label "Cloud Computing" .
+
+### Company
+cpo:Company_TechCorp rdf:type cpo:Company ;
+    rdfs:label "TechCorp Solutions" ;
+    cpo:offers cpo:JobRole_SDE .
+
+cpo:Company_InnovateAI rdf:type cpo:Company ;
+    rdfs:label "Innovate AI Labs" ;
+    cpo:offers cpo:JobRole_MLAssociate .
+
+### Job Roles
+cpo:JobRole_SDE rdf:type cpo:JobRole ;
+    cpo:jobRoleName "Software Development Engineer" ;
+    cpo:requiresSkill cpo:Skill_Python, cpo:Skill_Java, cpo:Skill_SQL .
+
+cpo:JobRole_MLAssociate rdf:type cpo:JobRole ;
+    cpo:jobRoleName "Machine Learning Associate" ;
+    cpo:requiresSkill cpo:Skill_Python, cpo:Skill_MachineLearning, cpo:Skill_SQL .
+
+### Placement Drive
+cpo:Drive_TechCorp2026 rdf:type cpo:PlacementDrive ;
+    rdfs:label "TechCorp Annual Campus Drive 2026" ;
+    cpo:driveDate "2026-11-15"^^xsd:date .
+
+cpo:Company_TechCorp cpo:conducts cpo:Drive_TechCorp2026 .
+
+### Students & Academics
+cpo:Student_PriyaSharma rdf:type cpo:Student ;
+    cpo:studentName "Priya Sharma" ;
+    cpo:studentEmail "priya.sharma@campus.edu" ;
+    cpo:hasAcademicInformation cpo:Academic_Priya ;
+    cpo:hasSkill cpo:Skill_Python, cpo:Skill_MachineLearning, cpo:Skill_SQL ;
+    cpo:appliesFor cpo:Drive_TechCorp2026 ;
+    cpo:receivesPrediction cpo:Prediction_Priya .
+
+cpo:Academic_Priya rdf:type cpo:AcademicInformation ;
+    cpo:cgpa "8.85"^^xsd:float ;
+    cpo:tenthPercentage "92.5"^^xsd:float ;
+    cpo:intermediatePercentage "89.0"^^xsd:float ;
+    cpo:backlogCount 0 ;
+    cpo:attendancePercentage "94.0"^^xsd:float .
+
+cpo:Prediction_Priya rdf:type cpo:Prediction ;
+    cpo:predictionScore "92.5"^^xsd:float .
+
+cpo:Student_RahulVerma rdf:type cpo:Student ;
+    cpo:studentName "Rahul Verma" ;
+    cpo:studentEmail "rahul.verma@campus.edu" ;
+    cpo:hasAcademicInformation cpo:Academic_Rahul ;
+    cpo:hasSkill cpo:Skill_Java, cpo:Skill_SQL .
+
+cpo:Academic_Rahul rdf:type cpo:AcademicInformation ;
+    cpo:cgpa "7.30"^^xsd:float ;
+    cpo:tenthPercentage "81.0"^^xsd:float ;
+    cpo:intermediatePercentage "78.5"^^xsd:float ;
+    cpo:backlogCount 0 ;
+    cpo:attendancePercentage "88.0"^^xsd:float .

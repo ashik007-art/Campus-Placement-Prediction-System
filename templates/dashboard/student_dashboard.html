@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Student Portal - PlacementHub{% endblock %}
+{% block page_heading %}Welcome, {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<!-- Placement Readiness Assessment Banner -->
+<div class="readiness-banner">
+  <div class="readiness-content">
+    <h2>Placement Readiness Assessment</h2>
+    {% if latest_prediction %}
+      <p>
+        Evaluated on <strong>{{ latest_prediction.created_at }}</strong> using <strong>{{ latest_prediction.mode }}</strong>.
+        {{ latest_prediction.key_factors }}
+      </p>
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <span class="badge {% if latest_prediction.readiness_category == 'High Readiness' %}tier-high{% elif latest_prediction.readiness_category == 'Moderate Readiness' %}tier-moderate{% else %}tier-low{% endif %}" style="font-size: 0.85rem; padding: 6px 14px;">
+          {{ latest_prediction.readiness_category }}
+        </span>
+        <form method="POST" action="{{ url_for('predictions.evaluate_readiness') }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-arrows-rotate"></i> Recalculate Readiness
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <p>You have not generated an initial placement readiness score. Run an automated evaluation based on your academics, skills, and projects.</p>
+      <form method="POST" action="{{ url_for('predictions.evaluate_readiness') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-bolt"></i> Evaluate Placement Readiness Now
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="score-display-box">
+    <div class="score-number">{{ "%.1f"|format(latest_prediction.readiness_score) if latest_prediction else "--" }}%</div>
+    <div class="score-tier-label">{{ latest_prediction.readiness_category if latest_prediction else "Pending" }}</div>
+  </div>
+</div>
+
+<!-- Profile Completion & Quick Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-info" style="width: 100%;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="stat-label">Profile Completion</span>
+        <span style="font-weight: 700; color: var(--primary);">{{ student.profile_completion }}%</span>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar {% if student.profile_completion >= 80 %}progress-bar-success{% elif student.profile_completion >= 50 %}progress-bar-warning{% else %}progress-bar-danger{% endif %}"
+             style="width: {{ student.profile_completion }}%;"></div>
+      </div>
+      <span class="stat-subtext"><a href="{{ url_for('students.view_student', student_id=student.id) }}" style="color: var(--primary); text-decoration: none;">Update profile details &rarr;</a></span>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">UG CGPA</span>
+      <span class="stat-value">{{ "%.2f"|format(student.cgpa) }}</span>
+      <span class="stat-subtext">Active Backlogs: <strong>{{ student.backlogs }}</strong></span>
+    </div>
+    <div class="stat-icon stat-icon-blue">
+      <i class="fa-solid fa-graduation-cap"></i>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">Verified Skills</span>
+      <span class="stat-value">{{ student.skills|length }}</span>
+      <span class="stat-subtext">{{ student.projects|length }} Projects &bull; {{ student.internships|length }} Internships</span>
+    </div>
+    <div class="stat-icon stat-icon-purple">
+      <i class="fa-solid fa-code"></i>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">Applications</span>
+      <span class="stat-value">{{ applications|length }}</span>
+      <span class="stat-subtext">Active recruitment drives</span>
+    </div>
+    <div class="stat-icon stat-icon-amber">
+      <i class="fa-solid fa-paper-plane"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Radar Chart & Recommendations Grid -->
+<div class="charts-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-chart-radar" style="color: var(--primary); margin-right: 8px;"></i> Competency Distribution</h2>
+      <span class="badge badge-neutral">{{ student.department }}</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="studentRadarChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-lightbulb" style="color: #f59e0b; margin-right: 8px;"></i> Personalized Recommendations</h2>
+      <a href="{{ url_for('recommendations.recommendations') }}" class="btn btn-secondary btn-sm">View All &amp; Skill Gap</a>
+    </div>
+    <div class="card-body">
+      {% for r in recommendations %}
+      <div class="list-item-card">
+        <div class="item-left">
+          <span class="badge {% if r.priority == 'High' %}badge-danger{% elif r.priority == 'Medium' %}badge-warning{% else %}badge-info{% endif %}">
+            {{ r.priority }}
+          </span>
+          <div>
+            <div style="font-weight: 600; font-size: 0.88rem;">{{ r.title }}</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.3;">{{ r.description }}</div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="text-muted" style="text-align: center; padding: 24px;">No immediate recommendations identified. Outstanding profile!</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Available Placement Drives & Application Status -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px;">
+  <!-- Available Recruitment Drives -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-bullhorn" style="color: var(--primary); margin-right: 8px;"></i> Eligible Recruitment Drives</h2>
+      <a href="{{ url_for('placements.list_drives') }}" class="btn btn-secondary btn-sm">Explore All Drives</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Company &amp; Role</th>
+              <th>Criteria</th>
+              <th>Package</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in upcoming_drives %}
+            {% set eligible, reason = d.is_student_eligible(student.cgpa, student.backlogs) %}
+            <tr>
+              <td>
+                <div style="font-weight: 600;">{{ d.company_name }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">{{ d.role_name }}</div>
+              </td>
+              <td>
+                <div style="font-size: 0.78rem;">Min CGPA: <strong>{{ "%.1f"|format(d.min_cgpa) }}</strong></div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">Max Backlogs: {{ d.max_backlogs }}</div>
+              </td>
+              <td><span class="badge badge-neutral">{{ d.salary_package }}</span></td>
+              <td>
+                {% if eligible %}
+                <form method="POST" action="{{ url_for('placements.apply_drive', drive_id=d.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" class="btn btn-primary btn-sm" style="padding: 4px 10px;">Apply</button>
+                </form>
+                {% else %}
+                <span class="badge badge-danger" title="{{ reason }}">Ineligible</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted" style="text-align: center; padding: 20px;">No upcoming drives currently listed.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application History -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-file-signature" style="color: #10b981; margin-right: 8px;"></i> My Applications</h2>
+      <a href="{{ url_for('placements.applications') }}" class="btn btn-secondary btn-sm">Full History</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Role</th>
+              <th>Applied Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in applications %}
+            <tr>
+              <td style="font-weight: 600;">{{ app.company_name }}</td>
+              <td>{{ app.role_name }}</td>
+              <td style="font-size: 0.8rem; color: var(--text-muted);">{{ (app.applied_at|string)[:10] if app.applied_at else "Recent" }}</td>
+              <td>
+                <span class="badge {% if app.status == 'Selected' %}badge-success{% elif app.status == 'Shortlisted' or app.status == 'Interview' %}badge-warning{% elif app.status == 'Rejected' %}badge-danger{% else %}badge-info{% endif %}">
+                  {{ app.status }}
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted" style="text-align: center; padding: 20px;">You have not applied to any drives yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.STUDENT_RADAR_DATA = {
+    cgpa: {{ student.cgpa }},
+    skills_count: {{ student.skills|length }},
+    projects_count: {{ student.projects|length }},
+    internships_count: {{ student.internships|length }},
+    aptitude_score: {% if student.aptitude_level == 'Advanced' %}3{% elif student.aptitude_level == 'Intermediate' %}2{% else %}1{% endif %},
+    communication_score: {% if student.communication_level == 'Advanced' %}3{% elif student.communication_level == 'Intermediate' %}2{% else %}1{% endif %}
+  };
+</script>
+{% endblock %}

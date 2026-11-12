@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Applications - PlacementHub{% endblock %}
+{% block page_heading %}{% if current_user.role == 'admin' %}Recruitment Drive Applications{% else %}My Drive Applications{% endif %}{% endblock %}
+
+{% block content %}
+{% if current_user.role == 'admin' %}
+<!-- Admin Filter Bar -->
+<form method="GET" action="{{ url_for('placements.applications') }}" class="filter-bar">
+  <div class="filter-group">
+    <select name="drive_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="">All Recruitment Drives</option>
+      {% for d in drives %}
+      <option value="{{ d.id }}" {% if selected_drive_id == d.id|string %}selected{% endif %}>
+        {{ d.title }} ({{ d.company_name }})
+      </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    {% if selected_drive_id %}
+    <a href="{{ url_for('placements.applications') }}" class="btn btn-secondary btn-sm">Clear</a>
+    {% endif %}
+  </div>
+  <span class="badge badge-info">{{ applications|length }} Applications Listed</span>
+</form>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Candidate Application Registry</h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Candidate</th>
+            <th>Department</th>
+            <th>CGPA &amp; Backlogs</th>
+            <th>Drive &amp; Role</th>
+            <th>Applied At</th>
+            <th>Status</th>
+            <th>Update Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in applications %}
+          <tr>
+            <td>
+              <div style="font-weight: 700;">{{ a.student_name }}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">{{ a.student_id_number or a.student_email }}</div>
+            </td>
+            <td style="font-size: 0.82rem;">{{ a.department }}</td>
+            <td>
+              <strong>{{ "%.2f"|format(a.student_cgpa) if a.student_cgpa else "N/A" }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">{{ a.student_backlogs }} backlogs</div>
+            </td>
+            <td>
+              <div style="font-weight: 600;">{{ a.company_name }}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">{{ a.role_name }}</div>
+            </td>
+            <td style="font-size: 0.8rem; color: var(--text-muted);">{{ (a.applied_at|string)[:10] if a.applied_at else "N/A" }}</td>
+            <td>
+              <span class="badge {% if a.status == 'Selected' %}badge-success{% elif a.status in ('Shortlisted', 'Interview') %}badge-warning{% elif a.status == 'Rejected' %}badge-danger{% else %}badge-info{% endif %}">
+                {{ a.status }}
+              </span>
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('placements.update_application_status', app_id=a.id) }}" style="display: flex; gap: 6px; align-items: center;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <select name="status" class="form-control" style="font-size: 0.78rem; padding: 4px 6px; width: auto;">
+                  <option value="Applied" {% if a.status == 'Applied' %}selected{% endif %}>Applied</option>
+                  <option value="Shortlisted" {% if a.status == 'Shortlisted' %}selected{% endif %}>Shortlisted</option>
+                  <option value="Interview" {% if a.status == 'Interview' %}selected{% endif %}>Interview</option>
+                  <option value="Selected" {% if a.status == 'Selected' %}selected{% endif %}>Selected</option>
+                  <option value="Rejected" {% if a.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+                <button type="submit" class="btn btn-secondary btn-sm" style="padding: 4px 8px;" title="Save Status">
+                  <i class="fa-solid fa-check"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align: center; padding: 30px;" class="text-muted">No applications found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- Student View -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">My Placement Applications ({{ applications|length }})</h2>
+    <a href="{{ url_for('placements.list_drives') }}" class="btn btn-primary btn-sm">Explore More Drives</a>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Job Role</th>
+            <th>Drive Title</th>
+            <th>Scheduled Date</th>
+            <th>Package</th>
+            <th>Application Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in applications %}
+          <tr>
+            <td style="font-weight: 700;">{{ a.company_name }}</td>
+            <td>{{ a.role_name }}</td>
+            <td style="font-size: 0.85rem; color: #475569;">{{ a.drive_title }}</td>
+            <td style="font-size: 0.82rem;">{{ a.drive_date }}</td>
+            <td><span class="badge badge-neutral">{{ a.salary_package }}</span></td>
+            <td>
+              <span class="badge {% if a.status == 'Selected' %}badge-success{% elif a.status in ('Shortlisted', 'Interview') %}badge-warning{% elif a.status == 'Rejected' %}badge-danger{% else %}badge-info{% endif %}" style="font-size: 0.82rem; padding: 5px 12px;">
+                {{ a.status }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 36px; color: var(--text-muted);">
+              You have not submitted applications to any campus recruitment drives yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

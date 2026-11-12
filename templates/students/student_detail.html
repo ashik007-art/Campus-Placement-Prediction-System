@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.full_name }} - Candidate Profile{% endblock %}
+{% block page_heading %}{{ student.full_name }}'s Academic Profile{% endblock %}
+
+{% block content %}
+<!-- Top Header Profile Card -->
+<div class="card">
+  <div class="card-body">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: gap; gap: 20px;">
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <div class="avatar-circle" style="width: 64px; height: 64px; font-size: 1.5rem; background: var(--primary);">
+          {{ student.full_name[:2].upper() }}
+        </div>
+        <div>
+          <h2 style="font-size: 1.4rem; font-weight: 700;">{{ student.full_name }}</h2>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+            <span class="badge badge-neutral">{{ student.student_id_number }}</span> &bull;
+            <span>{{ student.department }}</span> &bull;
+            <span>Class of {{ student.graduation_year }}</span>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 6px;">
+            <i class="fa-solid fa-envelope"></i> {{ student.email }} &bull;
+            <i class="fa-solid fa-phone"></i> {{ student.phone or "Not provided" }}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{{ url_for('students.edit_student', student_id=student.id) }}" class="btn btn-secondary btn-sm">
+          <i class="fa-solid fa-pen"></i> Edit Profile
+        </a>
+        <form method="POST" action="{{ url_for('predictions.evaluate_readiness') }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          {% if current_user.role == 'admin' %}
+          <input type="hidden" name="student_id" value="{{ student.id }}">
+          {% endif %}
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-brain"></i> Evaluate ML Readiness
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Academic Metrics Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">UG CGPA</span>
+      <span class="stat-value">{{ "%.2f"|format(student.cgpa) }}</span>
+      <span class="stat-subtext">Scale of 10.0</span>
+    </div>
+    <div class="stat-icon stat-icon-blue"><i class="fa-solid fa-graduation-cap"></i></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">Backlogs</span>
+      <span class="stat-value">{{ student.backlogs }}</span>
+      <span class="stat-subtext">Active backlog papers</span>
+    </div>
+    <div class="stat-icon {% if student.backlogs > 0 %}stat-icon-amber{% else %}stat-icon-green{% endif %}">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">10th / 12th Board</span>
+      <span class="stat-value" style="font-size: 1.4rem;">{{ "%.1f"|format(student.tenth_percentage) }}% / {{ "%.1f"|format(student.twelfth_percentage) }}%</span>
+      <span class="stat-subtext">Secondary academics</span>
+    </div>
+    <div class="stat-icon stat-icon-purple"><i class="fa-solid fa-book"></i></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-info">
+      <span class="stat-label">Attendance</span>
+      <span class="stat-value">{{ "%.1f"|format(student.attendance_percentage) }}%</span>
+      <span class="stat-subtext">Semester attendance</span>
+    </div>
+    <div class="stat-icon stat-icon-green"><i class="fa-solid fa-clipboard-user"></i></div>
+  </div>
+</div>
+
+<!-- Skills & Experience Sections -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px;">
+  <!-- Technical Skills Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-code" style="color: var(--primary); margin-right: 8px;"></i> Technical &amp; Programming Skills</h2>
+      <button type="button" class="btn btn-primary btn-sm" data-open-modal="addSkillModal">
+        <i class="fa-solid fa-plus"></i> Add Skill
+      </button>
+    </div>
+    <div class="card-body">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        {% for s in student.skills %}
+        <span class="badge badge-neutral" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 0.85rem;">
+          <strong>{{ s.name }}</strong>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">({{ s.proficiency }})</span>
+          <form method="POST" action="{{ url_for('students.delete_skill', student_id=student.id, skill_id=s.id) }}" style="display: inline;" data-confirm="Remove {{ s.name }}?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0 2px;">&times;</button>
+          </form>
+        </span>
+        {% else %}
+        <p class="text-muted" style="font-size: 0.85rem;">No technical skills registered yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Internships Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-briefcase" style="color: #10b981; margin-right: 8px;"></i> Practical Internships</h2>
+      <button type="button" class="btn btn-primary btn-sm" data-open-modal="addInternshipModal">
+        <i class="fa-solid fa-plus"></i> Add Internship
+      </button>
+    </div>
+    <div class="card-body">
+      {% for intern in student.internships %}
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-weight: 700;">{{ intern.role }} @ {{ intern.company_name }}</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">{{ intern.duration_months }} month(s) &bull; {{ intern.start_date or '' }} to {{ intern.end_date or 'Present' }}</div>
+            {% if intern.description %}
+            <p style="font-size: 0.82rem; margin-top: 4px; color: #475569;">{{ intern.description }}</p>
+            {% endif %}
+          </div>
+          <form method="POST" action="{{ url_for('students.delete_internship', student_id=student.id, intern_id=intern.id) }}" data-confirm="Delete internship record?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444; padding: 3px 6px;"><i class="fa-solid fa-trash"></i></button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-muted" style="font-size: 0.85rem;">No industry internships recorded.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Projects Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-laptop-code" style="color: #8b5cf6; margin-right: 8px;"></i> Software Projects</h2>
+      <button type="button" class="btn btn-primary btn-sm" data-open-modal="addProjectModal">
+        <i class="fa-solid fa-plus"></i> Add Project
+      </button>
+    </div>
+    <div class="card-body">
+      {% for proj in student.projects %}
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-weight: 700;">{{ proj.title }}</div>
+            {% if proj.tech_stack %}
+            <div style="font-size: 0.78rem; color: var(--primary);">Stack: {{ proj.tech_stack }}</div>
+            {% endif %}
+            {% if proj.description %}
+            <p style="font-size: 0.82rem; margin-top: 4px; color: #475569;">{{ proj.description }}</p>
+            {% endif %}
+            {% if proj.github_url %}
+            <a href="{{ proj.github_url }}" target="_blank" rel="noopener" style="font-size: 0.78rem; color: #2563eb; text-decoration: none;">
+              <i class="fa-brands fa-github"></i> Repository Link &rarr;
+            </a>
+            {% endif %}
+          </div>
+          <form method="POST" action="{{ url_for('students.delete_project', student_id=student.id, project_id=proj.id) }}" data-confirm="Delete project?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444; padding: 3px 6px;"><i class="fa-solid fa-trash"></i></button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-muted" style="font-size: 0.85rem;">No technical projects listed.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Certifications Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i class="fa-solid fa-certificate" style="color: #f59e0b; margin-right: 8px;"></i> Certifications &amp; Credentials</h2>
+      <button type="button" class="btn btn-primary btn-sm" data-open-modal="addCertModal">
+        <i class="fa-solid fa-plus"></i> Add Certification
+      </button>
+    </div>
+    <div class="card-body">
+      {% for cert in student.certifications %}
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-weight: 700;">{{ cert.title }}</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">{{ cert.issuing_organization }} &bull; {{ cert.issue_date or '' }}</div>
+            {% if cert.credential_url %}
+            <a href="{{ cert.credential_url }}" target="_blank" rel="noopener" style="font-size: 0.78rem; color: #2563eb; text-decoration: none;">
+              Verify Credential &rarr;
+            </a>
+            {% endif %}
+          </div>
+          <form method="POST" action="{{ url_for('students.delete_certification', student_id=student.id, cert_id=cert.id) }}" data-confirm="Delete certification?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444; padding: 3px 6px;"><i class="fa-solid fa-trash"></i></button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-muted" style="font-size: 0.85rem;">No external certifications uploaded.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Modal: Add Skill -->
+<div class="modal-overlay" id="addSkillModal">
+  <div class="modal-card">
+    <form method="POST" action="{{ url_for('students.add_skill', student_id=student.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; font-weight: 700;">Add / Update Skill</h3>
+        <button type="button" class="alert-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="skill_id">Select Skill <span class="required">*</span></label>
+          <select id="skill_id" name="skill_id" class="form-control" required>
+            {% for sk in master_skills %}
+            <option value="{{ sk.id }}">{{ sk.name }} ({{ sk.category }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="proficiency">Proficiency Level <span class="required">*</span></label>
+          <select id="proficiency" name="proficiency" class="form-control" required>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate" selected>Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Skill</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Add Internship -->
+<div class="modal-overlay" id="addInternshipModal">
+  <div class="modal-card">
+    <form method="POST" action="{{ url_for('students.add_internship', student_id=student.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; font-weight: 700;">Record Internship Experience</h3>
+        <button type="button" class="alert-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Company / Organization <span class="required">*</span></label>
+          <input type="text" name="company_name" class="form-control" placeholder="e.g. Google, Infosys" required>
+        </div>
+        <div class="form-group">
+          <label>Job Title / Role <span class="required">*</span></label>
+          <input type="text" name="role" class="form-control" placeholder="e.g. Software Engineering Intern" required>
+        </div>
+        <div class="form-group">
+          <label>Duration (Months) <span class="required">*</span></label>
+          <input type="number" min="1" name="duration_months" class="form-control" value="2" required>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" name="start_date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" name="end_date" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Key Responsibilities &amp; Learnings</label>
+          <textarea name="description" class="form-control" placeholder="Brief outline of deliverables..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Internship</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Add Project -->
+<div class="modal-overlay" id="addProjectModal">
+  <div class="modal-card">
+    <form method="POST" action="{{ url_for('students.add_project', student_id=student.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; font-weight: 700;">Add Project</h3>
+        <button type="button" class="alert-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Project Title <span class="required">*</span></label>
+          <input type="text" name="title" class="form-control" placeholder="e.g. AI-driven Fraud Detector" required>
+        </div>
+        <div class="form-group">
+          <label>Technology Stack</label>
+          <input type="text" name="tech_stack" class="form-control" placeholder="e.g. Python, Flask, React, SQLite">
+        </div>
+        <div class="form-group">
+          <label>GitHub or Project URL</label>
+          <input type="url" name="github_url" class="form-control" placeholder="https://github.com/username/project">
+        </div>
+        <div class="form-group">
+          <label>Project Summary</label>
+          <textarea name="description" class="form-control" placeholder="Key outcomes and architecture..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Add Certification -->
+<div class="modal-overlay" id="addCertModal">
+  <div class="modal-card">
+    <form method="POST" action="{{ url_for('students.add_certification', student_id=student.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; font-weight: 700;">Add Certification</h3>
+        <button type="button" class="alert-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Certification Title <span class="required">*</span></label>
+          <input type="text" name="title" class="form-control" placeholder="e.g. AWS Certified Solutions Architect" required>
+        </div>
+        <div class="form-group">
+          <label>Issuing Organization <span class="required">*</span></label>
+          <input type="text" name="issuing_organization" class="form-control" placeholder="e.g. Amazon Web Services" required>
+        </div>
+        <div class="form-group">
+          <label>Issue Date</label>
+          <input type="date" name="issue_date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Verification Link</label>
+          <input type="url" name="credential_url" class="form-control" placeholder="https://aws.amazon.com/verification/...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Certification</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

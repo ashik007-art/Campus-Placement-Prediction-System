@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Skill Gap Analysis &amp; Recommendations - PlacementHub{% endblock %}
+{% block page_heading %}Skill Gap Analysis &amp; Personalized Guidance{% endblock %}
+
+{% block content %}
+<!-- Interactive Skill Gap Analysis Card -->
+<div class="card" style="border-top: 4px solid var(--primary);">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title"><i class="fa-solid fa-sliders" style="color: var(--primary); margin-right: 8px;"></i> Target Job Role Skill Gap Comparison</h2>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+        Compare {{ student.full_name }}'s competencies directly against corporate recruiter requirements
+      </p>
+    </div>
+  </div>
+  <div class="card-body">
+    <!-- Selector Form -->
+    <form method="GET" action="{{ url_for('recommendations.recommendations') }}" style="max-width: 640px; margin-bottom: 24px;">
+      {% if current_user.role == 'admin' %}
+      <input type="hidden" name="student_id" value="{{ student.id }}">
+      {% endif %}
+
+      <div class="form-group">
+        <label for="job-role-select">Select Target Role / Company <span class="required">*</span></label>
+        <select id="job-role-select" name="job_role_id" class="form-control" data-student-id="{{ student.id }}" onchange="this.form.submit()">
+          <option value="" disabled {% if not selected_role_id %}selected{% endif %}>-- Choose Target Corporate Role --</option>
+          {% for r in job_roles %}
+          <option value="{{ r.id }}" {% if selected_role_id == r.id %}selected{% endif %}>
+            {{ r.company_name }} - {{ r.role_name }} (Min CGPA: {{ "%.1f"|format(r.min_cgpa) }}, Package: {{ r.salary_package }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+
+    <!-- Skill Gap Comparison Results Container -->
+    <div id="skill-gap-results" {% if not skill_gap %}style="display: none;"{% endif %}>
+      {% if skill_gap %}
+      <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
+            Role Competency Match Score
+          </h3>
+          <span class="badge {% if skill_gap.match_percentage >= 75 %}tier-high{% elif skill_gap.match_percentage >= 50 %}tier-moderate{% else %}tier-low{% endif %}" style="font-size: 1.1rem; padding: 6px 16px; font-weight: 800;">
+            <span id="skill-match-percentage">{{ skill_gap.match_percentage }}%</span> Match
+          </span>
+        </div>
+
+        <div class="progress-container" style="height: 14px; margin-bottom: 20px;">
+          <div id="skill-match-progress" class="progress-bar {% if skill_gap.match_percentage >= 75 %}progress-bar-success{% elif skill_gap.match_percentage >= 50 %}progress-bar-warning{% else %}progress-bar-danger{% endif %}"
+               style="width: {{ skill_gap.match_percentage }}%;"></div>
+        </div>
+
+        <p id="skill-gap-summary" style="font-size: 0.9rem; color: #334155; line-height: 1.5; margin-bottom: 20px; font-weight: 500;">
+          {{ skill_gap.recommendation_summary }}
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+          <!-- Matched Skills -->
+          <div style="background: #ffffff; border: 1px solid #a7f3d0; border-radius: 8px; padding: 16px;">
+            <div style="font-weight: 700; color: #065f46; margin-bottom: 8px; font-size: 0.88rem;">
+              <i class="fa-solid fa-circle-check"></i> Matching Competencies ({{ skill_gap.matched_skills|length }})
+            </div>
+            <div id="matched-skills-list" style="display: flex; flex-wrap: wrap; gap: 6px;">
+              {% for s in skill_gap.matched_skills %}
+              <span class="badge badge-success">{{ s.name }}</span>
+              {% else %}
+              <span class="text-muted" style="font-size: 0.85rem;">None</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Missing Skills -->
+          <div style="background: #ffffff; border: 1px solid #fecaca; border-radius: 8px; padding: 16px;">
+            <div style="font-weight: 700; color: #991b1b; margin-bottom: 8px; font-size: 0.88rem;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Missing Required Skills ({{ skill_gap.missing_skills|length }})
+            </div>
+            <div id="missing-skills-list" style="display: flex; flex-wrap: wrap; gap: 6px;">
+              {% for s in skill_gap.missing_skills %}
+              <span class="badge badge-danger">{{ s.name }}</span>
+              {% else %}
+              <span class="text-muted" style="font-size: 0.85rem;">None (100% prerequisite match!)</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 18px; font-size: 0.78rem; color: var(--text-muted);">
+          <i class="fa-solid fa-circle-info"></i> Skill matching percentages are informational comparative indicators calculated strictly against job role prerequisite tags. They do not constitute an interview guarantee or job offer.
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Personalized Recommendations List -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title"><i class="fa-solid fa-lightbulb" style="color: #f59e0b; margin-right: 8px;"></i> Personalized Career &amp; Readiness Guidance</h2>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Heuristic guidance derived from candidate's academic standing, backlog count, and skill depth</p>
+    </div>
+    <span class="badge badge-neutral">{{ recommendations|length }} Active Recommendations</span>
+  </div>
+  <div class="card-body">
+    {% for r in recommendations %}
+    <div class="list-item-card" style="padding: 16px 0;">
+      <div class="item-left" style="align-items: flex-start; gap: 16px;">
+        <span class="badge {% if r.priority == 'High' %}badge-danger{% elif r.priority == 'Medium' %}badge-warning{% else %}badge-info{% endif %}" style="margin-top: 2px;">
+          {{ r.priority }} Priority
+        </span>
+        <div>
+          <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">{{ r.title }}</div>
+          <div style="font-size: 0.85rem; color: #475569; margin-top: 4px; line-height: 1.5;">{{ r.description }}</div>
+        </div>
+      </div>
+      <span class="badge badge-neutral" style="font-size: 0.75rem;">{{ r.category }}</span>
+    </div>
+    {% else %}
+    <p class="text-muted" style="text-align: center; padding: 24px;">No immediate recommendations identified. Candidate profile is exceptionally balanced.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

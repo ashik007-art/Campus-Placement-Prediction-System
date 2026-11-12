@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students - PlacementHub{% endblock %}
+{% block page_heading %}Registered Candidates Directory{% endblock %}
+
+{% block content %}
+<!-- Filter & Search Toolbar -->
+<form method="GET" action="{{ url_for('students.list_students') }}" class="filter-bar">
+  <div class="filter-group">
+    <div class="search-input-wrapper">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" name="search" class="form-control" placeholder="Search by name, email, roll no..." value="{{ search or '' }}">
+    </div>
+
+    <select name="department" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="">All Departments</option>
+      {% for d in departments %}
+      <option value="{{ d }}" {% if selected_dept == d %}selected{% endif %}>{{ d }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="graduation_year" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="">All Batch Years</option>
+      {% for y in years %}
+      <option value="{{ y }}" {% if selected_year == y|string %}selected{% endif %}>Batch {{ y }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    {% if search or selected_dept or selected_year %}
+    <a href="{{ url_for('students.list_students') }}" class="btn btn-secondary btn-sm">Clear</a>
+    {% endif %}
+  </div>
+
+  <a href="{{ url_for('students.add_student') }}" class="btn btn-primary btn-sm">
+    <i class="fa-solid fa-user-plus"></i> Add New Student
+  </a>
+</form>
+
+<!-- Student List Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Candidate Records ({{ students|length }})</h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Name &amp; Email</th>
+            <th>Department &amp; Batch</th>
+            <th>UG CGPA</th>
+            <th>Backlogs</th>
+            <th>10th / 12th</th>
+            <th>Attendance</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td><span class="badge badge-neutral" style="font-family: monospace;">{{ s.student_id_number }}</span></td>
+            <td>
+              <div style="font-weight: 600;">{{ s.full_name }}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">{{ s.email }}</div>
+            </td>
+            <td>
+              <div style="font-size: 0.82rem;">{{ s.department }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Class of {{ s.graduation_year }}</div>
+            </td>
+            <td><strong>{{ "%.2f"|format(s.cgpa) if s.cgpa else "0.00" }}</strong></td>
+            <td>
+              {% if s.backlogs > 0 %}
+              <span class="badge badge-danger">{{ s.backlogs }} Active</span>
+              {% else %}
+              <span class="badge badge-success">Clear</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 0.8rem; color: var(--text-muted);">
+              {{ "%.1f"|format(s.tenth_percentage) }}% / {{ "%.1f"|format(s.twelfth_percentage) }}%
+            </td>
+            <td>{{ "%.1f"|format(s.attendance_percentage) }}%</td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <a href="{{ url_for('students.view_student', student_id=s.id) }}" class="btn btn-secondary btn-sm" style="padding: 4px 8px;" title="View Profile">
+                  <i class="fa-solid fa-eye"></i>
+                </a>
+                <a href="{{ url_for('students.edit_student', student_id=s.id) }}" class="btn btn-secondary btn-sm" style="padding: 4px 8px;" title="Edit Student">
+                  <i class="fa-solid fa-pen"></i>
+                </a>
+                <form method="POST" action="{{ url_for('students.delete_student', student_id=s.id) }}" style="display: inline;" data-confirm="Are you sure you want to delete {{ s.full_name }}? This will permanently delete their account and history.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px;" title="Delete Student">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">
+              No student profiles found matching your search and filter criteria.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

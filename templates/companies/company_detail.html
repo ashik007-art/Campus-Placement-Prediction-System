@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}{{ company.name }} - Corporate Details{% endblock %}
+{% block page_heading %}{{ company.name }}{% endblock %}
+
+{% block content %}
+<!-- Company Info Header Card -->
+<div class="card">
+  <div class="card-body">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h2 style="font-size: 1.5rem; font-weight: 700;">{{ company.name }}</h2>
+          <span class="badge badge-info">{{ company.industry }}</span>
+        </div>
+        <p style="font-size: 0.9rem; color: #475569; margin-top: 8px; max-width: 780px;">
+          {{ company.description or "No detailed overview provided." }}
+        </p>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; display: flex; gap: 18px;">
+          <span><i class="fa-solid fa-location-dot"></i> {{ company.location or "Multiple locations" }}</span>
+          {% if company.website %}
+          <a href="{{ company.website }}" target="_blank" rel="noopener" style="color: var(--primary); text-decoration: none;">
+            <i class="fa-solid fa-globe"></i> {{ company.website }}
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if current_user.role == 'admin' %}
+      <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('companies.edit_company', company_id=company.id) }}" class="btn btn-secondary btn-sm">
+          <i class="fa-solid fa-pen"></i> Edit Company
+        </a>
+        <button type="button" class="btn btn-primary btn-sm" data-open-modal="addRoleModal">
+          <i class="fa-solid fa-plus"></i> Add Job Role
+        </button>
+        <form method="POST" action="{{ url_for('companies.delete_company', company_id=company.id) }}" style="display: inline;" data-confirm="Are you sure you want to delete {{ company.name }} and all its job roles and drives?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Job Roles Table Card -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><i class="fa-solid fa-briefcase" style="color: var(--primary); margin-right: 8px;"></i> Available Job Roles &amp; Criteria</h2>
+    {% if current_user.role == 'admin' %}
+    <button type="button" class="btn btn-primary btn-sm" data-open-modal="addRoleModal">
+      <i class="fa-solid fa-plus"></i> Add Role
+    </button>
+    {% endif %}
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Role Title</th>
+            <th>Min CGPA</th>
+            <th>Max Backlogs</th>
+            <th>Package</th>
+            <th>Required Skills</th>
+            {% if current_user.role == 'admin' %}
+            <th>Action</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in company.job_roles %}
+          <tr>
+            <td>
+              <div style="font-weight: 700;">{{ r.role_name }}</div>
+              {% if r.description %}
+              <div style="font-size: 0.78rem; color: var(--text-muted); max-width: 320px;">{{ r.description }}</div>
+              {% endif %}
+            </td>
+            <td><strong>{{ "%.2f"|format(r.min_cgpa) }}</strong></td>
+            <td>
+              {% if r.max_backlogs == 0 %}
+              <span class="badge badge-success">0 Allowed</span>
+              {% else %}
+              <span class="badge badge-warning">Max {{ r.max_backlogs }}</span>
+              {% endif %}
+            </td>
+            <td><span class="badge badge-neutral" style="font-weight: 700;">{{ r.salary_package }}</span></td>
+            <td>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                {% for s in r.required_skills %}
+                <span class="badge badge-info" style="font-size: 0.72rem;">{{ s.name }}</span>
+                {% else %}
+                <span class="text-muted" style="font-size: 0.75rem;">None specified</span>
+                {% endfor %}
+              </div>
+            </td>
+            {% if current_user.role == 'admin' %}
+            <td>
+              <form method="POST" action="{{ url_for('companies.delete_job_role', company_id=company.id, role_id=r.id) }}" data-confirm="Remove job role {{ r.role_name }}?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444; padding: 3px 6px;">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+            </td>
+            {% endif %}
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 28px; color: var(--text-muted);">
+              No job roles have been configured for this organization yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Job Role -->
+{% if current_user.role == 'admin' %}
+<div class="modal-overlay" id="addRoleModal">
+  <div class="modal-card" style="max-width: 600px;">
+    <form method="POST" action="{{ url_for('companies.add_job_role', company_id=company.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; font-weight: 700;">Add New Job Role</h3>
+        <button type="button" class="alert-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="role_name">Job Role Title <span class="required">*</span></label>
+          <input type="text" id="role_name" name="role_name" class="form-control" placeholder="e.g. Software Development Engineer" required>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="min_cgpa">Minimum Required CGPA (0 - 10) <span class="required">*</span></label>
+            <input type="number" step="0.01" min="0" max="10" id="min_cgpa" name="min_cgpa" class="form-control" value="6.50" required>
+          </div>
+
+          <div class="form-group">
+            <label for="max_backlogs">Max Permitted Backlogs <span class="required">*</span></label>
+            <input type="number" min="0" id="max_backlogs" name="max_backlogs" class="form-control" value="0" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="salary_package">Annual Salary Package (CTC) <span class="required">*</span></label>
+          <input type="text" id="salary_package" name="salary_package" class="form-control" placeholder="e.g. 8.5 LPA" required>
+        </div>
+
+        <div class="form-group">
+          <label>Required Competencies / Skills (Select multiple)</label>
+          <div style="max-height: 140px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px;">
+            {% for sk in master_skills %}
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; font-size: 0.85rem; margin-bottom: 4px;">
+              <input type="checkbox" name="skill_ids" value="{{ sk.id }}">
+              <span>{{ sk.name }} <span class="text-muted">({{ sk.category }})</span></span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="role_description">Role Description</label>
+          <textarea id="role_description" name="description" class="form-control" placeholder="Key responsibilities..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Job Role</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

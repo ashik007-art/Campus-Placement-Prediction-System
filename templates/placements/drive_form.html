@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{% if drive %}Edit Drive - {{ drive.title }}{% else %}Schedule Drive{% endif %} - PlacementHub{% endblock %}
+{% block page_heading %}{% if drive %}Edit Placement Drive{% else %}Schedule Campus Recruitment Drive{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 740px; margin: 0 auto;">
+  <div class="card-header">
+    <h2 class="card-title">
+      <i class="fa-solid fa-bullhorn" style="color: var(--primary); margin-right: 8px;"></i>
+      Drive Parameters
+    </h2>
+    <a href="{{ url_for('placements.list_drives') }}" class="btn btn-secondary btn-sm">Cancel</a>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{% if drive %}{{ url_for('placements.edit_drive', drive_id=drive.id) }}{% else %}{{ url_for('placements.add_drive') }}{% endif %}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div class="form-group">
+        <label for="title">Recruitment Drive Title <span class="required">*</span></label>
+        <input type="text" id="title" name="title" class="form-control" value="{{ drive.title if drive else '' }}" placeholder="e.g. Google Annual Campus Drive 2026" required>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="company_id">Recruiting Company <span class="required">*</span></label>
+          <select id="company_id" name="company_id" class="form-control" required>
+            <option value="" disabled selected>-- Select Company --</option>
+            {% for c in companies %}
+            <option value="{{ c.id }}" {% if drive and drive.company_id == c.id %}selected{% endif %}>{{ c.name }} ({{ c.industry }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="job_role_id">Target Job Role <span class="required">*</span></label>
+          <select id="job_role_id" name="job_role_id" class="form-control" required>
+            <option value="" disabled selected>-- Select Job Role --</option>
+            {% for c in companies %}
+              {% for r in c.job_roles %}
+              <option value="{{ r.id }}" {% if drive and drive.job_role_id == r.id %}selected{% endif %}>
+                {{ c.name }} - {{ r.role_name }} ({{ r.salary_package }})
+              </option>
+              {% endfor %}
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="drive_date">Scheduled Drive Date <span class="required">*</span></label>
+          <input type="date" id="drive_date" name="drive_date" class="form-control" value="{{ drive.drive_date if drive else '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="application_deadline">Application Deadline <span class="required">*</span></label>
+          <input type="date" id="application_deadline" name="application_deadline" class="form-control" value="{{ drive.application_deadline if drive else '' }}" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Drive Status <span class="required">*</span></label>
+        <select id="status" name="status" class="form-control" required>
+          <option value="Upcoming" {% if drive and drive.status == 'Upcoming' %}selected{% endif %}>Upcoming</option>
+          <option value="Ongoing" {% if drive and drive.status == 'Ongoing' %}selected{% endif %}>Ongoing</option>
+          <option value="Completed" {% if drive and drive.status == 'Completed' %}selected{% endif %}>Completed</option>
+          <option value="Cancelled" {% if drive and drive.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="selection_process">Selection Process &amp; Rounds Outline</label>
+        <textarea id="selection_process" name="selection_process" class="form-control" placeholder="e.g. Round 1: Online Coding -> Round 2: Technical Interview -> Round 3: HR Round">{{ drive.selection_process if drive else '' }}</textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+        <a href="{{ url_for('placements.list_drives') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-save"></i> {% if drive %}Update Drive{% else %}Publish Placement Drive{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Placement Readiness Prediction - PlacementHub{% endblock %}
+{% block page_heading %}Placement-Readiness Intelligence{% endblock %}
+
+{% block content %}
+<!-- Intelligence Mode Information Banner -->
+<div class="card" style="border-left: 4px solid var(--primary);">
+  <div class="card-body">
+    <div style="display: flex; gap: 16px; align-items: flex-start;">
+      <i class="fa-solid fa-circle-info" style="color: var(--primary); font-size: 1.5rem; margin-top: 4px;"></i>
+      <div>
+        <h3 style="font-size: 1.05rem; font-weight: 700;">Dual-Engine Assessment Methodology</h3>
+        <p style="font-size: 0.85rem; color: #475569; line-height: 1.5; margin-top: 4px;">
+          This platform utilizes a <strong>Scikit-learn Machine Learning pipeline</strong> when a verified historical training model is loaded. If no model is detected, it automatically executes transparent <strong>Demo Readiness Scoring</strong> based on 11 standardized academic, technical, and portfolio weights.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if is_admin and not student %}
+<!-- Admin: Select Student to Run Evaluation -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><i class="fa-solid fa-play" style="color: var(--primary); margin-right: 8px;"></i> Trigger Evaluation for Candidate</h2>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('predictions.evaluate_readiness') }}" style="max-width: 600px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="form-group">
+        <label for="student_id">Select Student Profile <span class="required">*</span></label>
+        <select id="student_id" name="student_id" class="form-control" required>
+          <option value="" disabled selected>-- Choose Student --</option>
+          {% for s in students %}
+          <option value="{{ s.id }}">{{ s.full_name }} ({{ s.student_id_number }}) - CGPA: {{ "%.2f"|format(s.cgpa) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-brain"></i> Compute Placement Readiness
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Admin: Global Prediction History Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Recent Campus Assessment Records</h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Candidate</th>
+            <th>Department</th>
+            <th>Mode</th>
+            <th>Readiness Score</th>
+            <th>Category</th>
+            <th>Key Factors</th>
+            <th>Evaluated On</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in all_predictions %}
+          <tr>
+            <td style="font-weight: 700;">{{ p.student_name }}</td>
+            <td style="font-size: 0.82rem;">{{ p.department }}</td>
+            <td><span class="badge badge-neutral">{{ p.mode }}</span></td>
+            <td><strong>{{ "%.1f"|format(p.readiness_score) }}%</strong></td>
+            <td>
+              <span class="badge {% if p.readiness_category == 'High Readiness' %}tier-high{% elif p.readiness_category == 'Moderate Readiness' %}tier-moderate{% else %}tier-low{% endif %}">
+                {{ p.readiness_category }}
+              </span>
+            </td>
+            <td style="font-size: 0.78rem; color: #475569; max-width: 280px;">{{ p.key_factors }}</td>
+            <td style="font-size: 0.8rem; color: var(--text-muted);">{{ (p.created_at|string)[:16] if p.created_at else '' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align: center; padding: 24px;" class="text-muted">No prediction history records logged.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- Student View / Single Student Admin View -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><i class="fa-solid fa-bolt" style="color: var(--primary); margin-right: 8px;"></i> Run Readiness Assessment</h2>
+  </div>
+  <div class="card-body">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h3 style="font-size: 1.15rem; font-weight: 700;">{{ student.full_name }}</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+          CGPA: <strong>{{ "%.2f"|format(student.cgpa) }}</strong> &bull; Backlogs: <strong>{{ student.backlogs }}</strong> &bull;
+          Skills: <strong>{{ student.skills|length }}</strong> &bull; Projects: <strong>{{ student.projects|length }}</strong> &bull;
+          Internships: <strong>{{ student.internships|length }}</strong>
+        </p>
+      </div>
+
+      <form method="POST" action="{{ url_for('predictions.evaluate_readiness') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        {% if current_user.role == 'admin' %}
+        <input type="hidden" name="student_id" value="{{ student.id }}">
+        {% endif %}
+        <button type="submit" class="btn btn-primary" style="padding: 12px 24px; font-size: 0.95rem;">
+          <i class="fa-solid fa-brain"></i> Compute Placement Readiness
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Past Prediction History -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Prediction Assessment History ({{ predictions|length }})</h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Inference Engine</th>
+            <th>Readiness Score</th>
+            <th>Tier Category</th>
+            <th>Primary Drivers &amp; Factors</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in predictions %}
+          <tr>
+            <td style="font-size: 0.82rem; color: var(--text-muted);">{{ p.created_at }}</td>
+            <td><span class="badge badge-neutral">{{ p.mode }}</span></td>
+            <td><strong style="font-size: 1.05rem;">{{ "%.1f"|format(p.readiness_score) }}%</strong></td>
+            <td>
+              <span class="badge {% if p.readiness_category == 'High Readiness' %}tier-high{% elif p.readiness_category == 'Moderate Readiness' %}tier-moderate{% else %}tier-low{% endif %}">
+                {{ p.readiness_category }}
+              </span>
+            </td>
+            <td style="font-size: 0.82rem; color: #475569; max-width: 360px;">{{ p.key_factors }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" style="text-align: center; padding: 28px;" class="text-muted">No historical prediction records on file for this candidate. Click Compute above to run your first evaluation.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

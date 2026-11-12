@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Recruitment Drives - PlacementHub{% endblock %}
+{% block page_heading %}Campus Recruitment Drives{% endblock %}
+
+{% block content %}
+<!-- Filter & Actions Toolbar -->
+<form method="GET" action="{{ url_for('placements.list_drives') }}" class="filter-bar">
+  <div class="filter-group">
+    <select name="status" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="">All Drive Statuses</option>
+      <option value="Upcoming" {% if selected_status == 'Upcoming' %}selected{% endif %}>Upcoming</option>
+      <option value="Ongoing" {% if selected_status == 'Ongoing' %}selected{% endif %}>Ongoing</option>
+      <option value="Completed" {% if selected_status == 'Completed' %}selected{% endif %}>Completed</option>
+    </select>
+
+    <select name="company_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="">All Companies</option>
+      {% for c in companies %}
+      <option value="{{ c.id }}" {% if selected_company_id == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    {% if selected_status or selected_company_id %}
+    <a href="{{ url_for('placements.list_drives') }}" class="btn btn-secondary btn-sm">Clear</a>
+    {% endif %}
+  </div>
+
+  {% if current_user.role == 'admin' %}
+  <a href="{{ url_for('placements.add_drive') }}" class="btn btn-primary btn-sm">
+    <i class="fa-solid fa-plus"></i> Schedule New Drive
+  </a>
+  {% endif %}
+</form>
+
+<!-- Drives List Cards -->
+<div style="display: flex; flex-direction: column; gap: 20px;">
+  {% for d in drives %}
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">{{ d.title }}</h3>
+          <span class="badge {% if d.status == 'Upcoming' %}badge-info{% elif d.status == 'Ongoing' %}badge-warning{% elif d.status == 'Completed' %}badge-success{% else %}badge-neutral{% endif %}">
+            {{ d.status }}
+          </span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+          <strong style="color: #1e293b;">{{ d.company_name }}</strong> &bull; {{ d.role_name }} &bull;
+          <i class="fa-solid fa-location-dot"></i> {{ d.company_location or "Campus" }}
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span class="badge badge-neutral" style="font-size: 0.85rem; padding: 6px 12px; font-weight: 700;">
+          {{ d.salary_package }}
+        </span>
+
+        {% if current_user.role == 'admin' %}
+        <div style="display: flex; gap: 6px;">
+          <a href="{{ url_for('placements.edit_drive', drive_id=d.id) }}" class="btn btn-secondary btn-sm" title="Edit Drive">
+            <i class="fa-solid fa-pen"></i>
+          </a>
+          <a href="{{ url_for('placements.applications', drive_id=d.id) }}" class="btn btn-secondary btn-sm" title="View Applicants">
+            <i class="fa-solid fa-users"></i> {{ d.total_applications }}
+          </a>
+          <form method="POST" action="{{ url_for('placements.delete_drive', drive_id=d.id) }}" data-confirm="Cancel and delete this recruitment drive?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-danger btn-sm" title="Delete Drive">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+        <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Drive Date</div>
+          <div style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;">
+            <i class="fa-solid fa-calendar-day" style="color: var(--primary); margin-right: 4px;"></i> {{ d.drive_date }}
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Application Deadline</div>
+          <div style="font-weight: 700; color: #b91c1c; font-size: 0.95rem;">
+            <i class="fa-solid fa-clock" style="margin-right: 4px;"></i> {{ d.application_deadline }}
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Academic Thresholds</div>
+          <div style="font-size: 0.85rem; color: #1e293b;">
+            Min CGPA: <strong>{{ "%.2f"|format(d.min_cgpa) }}</strong> &bull; Max Backlogs: <strong>{{ d.max_backlogs }}</strong>
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Applications Count</div>
+          <div style="font-size: 0.95rem; font-weight: 700; color: var(--primary);">
+            {{ d.total_applications }} registered
+          </div>
+        </div>
+      </div>
+
+      {% if d.required_skills %}
+      <div style="margin-bottom: 14px;">
+        <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Required Skill Stack:</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;">
+          {% for sk in d.required_skills %}
+          <span class="badge badge-info" style="font-size: 0.75rem;">{{ sk.name }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if d.selection_process %}
+      <div style="font-size: 0.82rem; color: #475569; background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px;">
+        <strong>Selection Process:</strong> {{ d.selection_process }}
+      </div>
+      {% endif %}
+
+      <!-- Application CTA for Students -->
+      {% if current_user.role == 'student' %}
+      <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        {% if d.id in applied_drive_ids %}
+        <span class="badge badge-success" style="font-size: 0.85rem; padding: 6px 12px;">
+          <i class="fa-solid fa-check" style="margin-right: 4px;"></i> Already Applied
+        </span>
+        {% else %}
+          {% if student %}
+            {% set eligible, reason = d.is_student_eligible(student.cgpa, student.backlogs) %}
+            {% if eligible %}
+            <form method="POST" action="{{ url_for('placements.apply_drive', drive_id=d.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-paper-plane"></i> Submit Application for Drive
+              </button>
+            </form>
+            {% else %}
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="badge badge-danger">Not Eligible</span>
+              <span style="font-size: 0.8rem; color: var(--danger);">{{ reason }}</span>
+            </div>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+
+        <a href="{{ url_for('recommendations.recommendations', job_role_id=d.job_role_id) }}" class="btn btn-secondary btn-sm">
+          <i class="fa-solid fa-chart-simple"></i> Check Skill Gap Match
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="card" style="text-align: center; padding: 40px;">
+    <p class="text-muted">No campus placement drives currently listed under the selected filters.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
